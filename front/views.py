@@ -2,6 +2,15 @@ from django.shortcuts import render, redirect
 from main import models
 
 
+def index(request):
+    quizzes = models.Quiz.objects.all()
+    context = {
+        'quizzes':quizzes
+    }
+    return render(request, 'front/index.html', context)
+
+
+
 def quiz_detail(request, code):
     quiz = models.Quiz.objects.get(code=code)
     questions = models.Question.objects.filter(quiz=quiz)

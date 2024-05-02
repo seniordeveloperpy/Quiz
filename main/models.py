@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from ckeditor.fields import RichTextField
 from random import sample
 import string
 
@@ -27,7 +27,7 @@ class CodeGenerate(models.Model):
 
 
 class Quiz(CodeGenerate):
-    name = models.CharField(max_length=255)
+    name = RichTextField()
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
@@ -38,15 +38,12 @@ class Quiz(CodeGenerate):
         return f'{Question.objects.filter(quiz=self.id).count()}'
 
 class Question(CodeGenerate):
-    name = models.CharField(max_length=255)
+    name = RichTextField()
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
     
-    @property
-    def all_options(self):
-        return Option.objects.filter(question=self)
 
     @property
     def correct_answer(self):
@@ -63,15 +60,16 @@ class Option(CodeGenerate):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.name},{self.question}'
+        return self.name
 
-    # def save(self, *args, **kwargs):
-    #     options = Option.objects.filter(question=self.question).count()
-    #     first = options == 0
-    #     second = self.is_correct
-    #     if (first and second) or (not first and not second):
-    #         super(Option, self).save(*args, **kwargs)
-    #     raise ValueError
+    def save(self, *args, **kwargs):
+        options = Option.objects.filter(question = self.question).count()
+        first = options==0
+        correct = self.is_correct
+        if (first and correct) or (not first and not correct):
+            super(Option, self).save(*args, **kwargs)
+        else:
+            raise ValueError
     
 
 class Answer(CodeGenerate):
